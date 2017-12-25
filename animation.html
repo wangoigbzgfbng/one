@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body{
+            height: 100%;
+            width: 100%;
+        }
+        .absolute-position{
+            position: absolute;
+        }
+        #call{
+            height: 100px;
+            width: 100px;
+            border: 1px solid black;
+            boder-radius:50%;
+            
+
+        }
+    </style>
+</head>
+<body>
+<div id="call"class=" rect absolute-position">
+
+</div>
+<script>
+    class Movable {
+        constructor(id, timespan) {
+            this.element = document.getElementById(id);
+            this.timespan = timespan;
+            this.max = document.body.clientWidth - this.element.offsetWidth;
+            this.element.style.transition = `all linear ${this.timespan}s`;
+        }
+        bounce() {
+            var rightward = true;
+            var that = this;
+            function move() {
+                if (rightward)
+                    that.element.style.left = that.max + 'px';
+                else
+                    that.element.style.left = '0px';
+                rightward = !rightward;
+                setTimeout(move, that.timespan * 1000);
+            }
+            move();
+        }
+    }
+    new Movable('call', 1).bounce();
+</script>
+
+</body>
+<html>

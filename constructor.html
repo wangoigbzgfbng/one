@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<script>
+//			var dog={
+//				nei:"hapa",
+//				color:"hua",
+//				height:"50",
+//				voice:"wang~~",
+//			}
+		class dog{
+				constructor(nei,color,height,voice){
+					this.nei=nei;
+					this.color=color;
+					this.height=height;
+					this.voice=voice;
+				}
+			}
+		var wang=new dog("hapa","write",50,"wuWu");
+		print(wang);
+//		console.log(`种类:${dog1.nei} 颜色:${dog.color} 高度:${dog.height} 叫声:${dog.voice}`);
+		function print(a){
+			document.write(`种类:${a.nei}, 颜色:${a.color} ,高度:${a.height}, 叫声:${a.voice}`)
+		};
+		
+		</script>
+	</body>
+</html>

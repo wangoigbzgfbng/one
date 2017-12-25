@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>clock</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            border-color: transparent; /* toggle this attribute to show box for debug purpose */
+            border-style: solid;
+            border-width: 1px;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .plate {    /* dial plate of clock */
+            border-width: 10px;
+            border-style: solid;
+            border-radius: 50%;
+        }
+
+        .outer-plate { /* the outer border of clock */
+            border-color: lightgray;
+        }
+
+        .inner-plate {/* the inner border of clock */
+            position: relative;
+            height: 100%;
+            width: 100%;
+            border-color: gray;
+        }
+
+        .scale {/* the common styles of scale */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .scale-hour {/* hour scale(wider,longer) style */
+            height: 20px;
+            width: 10px;
+            margin: auto;
+            background-color: gray;
+        }
+
+        .scale-min { /* minute scale(shorder,thinner) style */
+            height: 12px;
+            width: 8px;
+            margin: auto;
+            background-color: lightgray;
+        }
+
+        .scale-legend { /* number title of hour scale */
+            font: 900 24px Arial;
+            text-align: center;
+        }
+
+        .pointer {/* pointers(hour,minute,second) common style */
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            pointer-events: none;
+            border: solid 0px red;
+        }
+
+        #hpc {/* hour pointer container */
+            z-index: 3;
+        }
+
+        #mpc { /* minute pointer container */
+            z-index: 4;
+        }
+
+        #spc { /* second pointer container */
+            z-index: 5;
+        }
+
+        #hpc > div {
+            width: 10px;
+            height: 40%;
+            margin: 15% auto auto auto;
+            background-color: black;
+        }
+
+        #mpc > div {
+            width: 6px;
+            height: 45%;
+            margin: 10% auto auto auto;
+            background-color: brown;
+        }
+
+        #spc > div {
+            width: 3px;
+            height: 53%;
+            margin: 2% auto auto auto;
+            background-color: red;
+        }
+
+        #center {
+            z-index: 6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-width:0;
+        }
+
+            #center > div {
+                background-color: darkgray;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                margin: auto auto;
+                line-height: 100%;
+                box-shadow: 5px 5px 10px;
+            }
+
+        .ctrlContainer {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .ctrlPanel {
+            /*border: outset 2px lightgray;*/
+        }
+            .ctrlPanel > div {
+                font: bold 24px Arial;
+                padding: 10px;
+                color: #222;
+                /*border: inset 2px lightgray;*/
+            }
+        .datePanel{
+            margin-top:100px;
+        }
+       
+    </style>
+    <script>
+        "use strict";
+        addEventListener("load", function () {
+            // draw timer panel
+            (function () {
+                var outerPlate = document.querySelector(".outer-plate"),
+                    innerPlate = outerPlate.firstElementChild;
+                window.addEventListener("resize", sizePlate);
+                sizePlate();
+                drawScales();
+                function sizePlate() {
+                    var sizePx = Math.min(innerHeight, innerWidth) + "px";
+                    outerPlate.style.width = sizePx;
+                    outerPlate.style.height = sizePx;
+                }
+                function drawScales() {
+                    var frag = document.createDocumentFragment(),
+                        deg = 0;
+                    for (var i = 0; i < 60; i++) {
+                        // create rotate div
+                        var rotator = document.createElement("div");
+                        rotator.className = "scale";
+                        rotator.style.transform = "rotate(" + deg + "deg)";
+                        // create scale div
+                        var scale = document.createElement("div");
+                        if (deg % 5 === 0) {
+                            // hour scale
+                            scale.className = "scale-hour";
+                            rotator.appendChild(scale);
+
+                            // add hour label
+                            var label = document.createElement("div");
+                            label.className = "scale-legend";
+                            label.textContent = String(i == 0 ? 12 : i / 5);
+                            label.style.transform = "rotate(-" + deg + "deg)";
+                            rotator.appendChild(label);
+                        } else {
+                            scale.className = "scale-min";
+                            rotator.appendChild(scale);
+                        }
+
+                        frag.appendChild(rotator);
+                        deg += 6;
+                    }
+                    innerPlate.appendChild(frag);
+                }
+            })();
+
+            // run timer
+            (function() {
+                var hp = document.getElementById("hpc"),
+                    mp = document.getElementById("mpc"),
+                    sp = document.getElementById("spc"),
+                    ptrLocator = createPointerLocator(),
+                    dateLocator = createDateLocator();
+
+                // answer click to timer mode change
+                $e("tickMode", "change", function (evt) {
+                    if (this.checked) {
+                        sp.style.transition = "";
+                        mp.style.transition = "";
+                        hp.style.transition = "";
+                    } else {
+                        sp.style.transition = "transform 1s linear";
+                        mp.style.transition = "transform 1s linear";
+                        hp.style.transition = "transform 1s linear";
+                    }
+                });      
+
+                // initalize pointers and date
+                updateLocators();
+
+                // set timer for periodically running updators
+                setInterval(updateLocators, 1000);
+
+                function updateLocators() {
+                    var date = new Date();
+                    ptrLocator(date);
+                    dateLocator(date);
+                }
+                function createPointerLocator() {
+                    var accSa, lastSa, accMa, lastMa, accHa, lastHa;
+                    return function (date) {
+                        var s = date.getSeconds(), sa = s * 6,    // s*360/60
+                            m = date.getMinutes(), ma = m * 6 + s / 10, // m*360/60+ (s/60)*(360/60)
+                            h = date.getHours(), ha = (h > 12 ? h - 12 : h) * 30 + m / 2; // h*360/12+(m/60)*(360/12)
+                        if (lastSa === undefined || h === 0 || h === 12) {
+                            accSa = sa, accMa = ma, accHa = ha;
+                        } else {
+                            accSa += increase(sa, lastSa);
+                            accMa += increase(ma, lastMa);
+                            accHa += increase(ha, lastHa);
+                        }
+                        lastSa = sa, lastMa = ma, lastHa = ha;
+                        sp.style.transform = "rotate(" + accSa + "deg)";
+                        mp.style.transform = "rotate(" + accMa + "deg)";
+                        hp.style.transform = "rotate(" + accHa + "deg)";
+                    }
+                    function increase(_new, _old) {
+                        var inc = _new - _old;
+                        if (inc < 0) inc += 360;
+                        return inc;
+                    }
+                }
+                function createDateLocator() {
+                    var _y, _m, _md, _wd,
+                        ey = document.getElementById("year"),
+                        em = document.getElementById("mon"),
+                        emd = document.getElementById("day"),
+                        ewd = document.getElementById("weekday");
+                    return function (date) {
+                        const weekDays = ["Sunday","Monday","Tuesday","Wensday","Thuersday","Friday","Saturday"];
+                        var y = date.getFullYear(),
+                            m = date.getMonth() + 1,
+                            md = date.getDate(),
+                            wd = date.getDay();
+                        if (md !== _md || m !== _m || y !== _y) {
+                            _y = y, _m = m, _md = md, _wd = wd;
+                            ey.textContent = y;
+                            em.textContent = m;
+                            emd.textContent = md;
+                            ewd.textContent = weekDays[wd];
+                        }
+                    }
+                }
+            })();
+
+            // answer click to box control
+            (function () {
+                var boxesRule = findCssRule("*"), ptrRule = findCssRule(".pointer");
+                if (boxesRule)
+                    $e("showBox", "click", function (evt) {
+                        boxesRule.style.borderColor = this.checked ? "blue" : "transparent";
+                    });
+                if (ptrRule)
+                    $e("showPtrBox", "click", function (evt) {
+                        ptrRule.style.borderWidth = this.checked ? "1px" : "0px";
+                    });
+
+                function findCssRule(ruleName) {
+                    var rules = document.styleSheets[0].rules, len = rules.length;
+                    for (var i = 0; i < len; i++) {
+                        if (rules[i].selectorText == ruleName) {
+                            return rules[i];
+                        }
+                    }
+                    return null;
+                }
+            })(); 
+
+            function $e(id, et, f) {
+                var el = document.getElementById(id);
+                if(el) el.addEventListener(et, f);
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="plate outer-plate">
+        <div class="plate inner-plate">
+            <div id="hpc" class="pointer"><div></div></div>
+            <div id="mpc" class="pointer"><div></div></div>
+            <div id="spc" class="pointer"><div></div></div>
+            <div id="center" class="pointer"><div></div></div>
+        </div>
+    </div>
+    <div class="ctrlContainer">
+        <div class="ctrlPanel">
+            <div>
+                <input id="tickMode" type="checkbox" checked />
+                <label for="tickMode">Tick Mode</label><br />
+                <input id="showBox" type="checkbox" />
+                <label for="showBox">Show Scale Boxes</label><br />
+                <input id="showPtrBox" type="checkbox" />
+                <label for="showPtrBox">Show Pointer Boxes</label>
+            </div>
+        </div>
+        <div class="ctrlPanel datePanel">
+            <div>
+                <p>
+                    <span id="year"></span>-
+                    <span id="mon"></span>-
+                    <span id="day"></span>
+                    <span> </span>
+                    <span id="weekday"></span>
+                </p>
+            </div>
+        </div>
+    </div>     
+</body>
+</html>

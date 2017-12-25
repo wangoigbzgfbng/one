@@ -1,0 +1,437 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        main {
+            width: 900px;
+            height: 600px;
+        }
+
+            main > div:first-child {
+                text-align: left;
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+
+        select {
+            margin-right: 100px;
+        }
+
+        button {
+            float: right;
+        }
+
+        .play-area {
+            height: 100%;
+            position: relative;
+            border: solid 1px gray;
+        }
+
+        .disk {
+            position: absolute;
+            left: 0;
+        }
+
+            .disk > div {
+                height: 100%;
+                margin: auto;
+                border: solid 1px lightgray;
+                border-radius: 5px;
+            }
+
+        .disabled-div {
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .label-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+            .label-container > span {
+                text-align: center;
+                width: 33.33%;
+                background-color: lightblue;
+                border: solid 1px gray;
+                font: bold 16px arial;
+            }
+    </style>
+</head>
+<body>
+    <main>
+        <div>
+            <label>数量：</label>
+            <select>
+                <option selected>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option>7</option>
+            </select>
+            <label>实现方式: </label>
+            <label><input type="radio" name="mode" value="1" checked />Callback实现</label>
+            <label><input type="radio" name="mode" value="2" />Promise实现</label>
+            <label><input type="radio" name="mode" value="3" />Async/await实现</label>
+            <button>start</button>
+        </div>
+        <div class="play-area"></div>
+        <div class="label-container"><span>Pile A</span><span>Pile B</span><span>Pile C</span></div>
+    </main>
+    <script>
+        /*  1. 关于版权： 本程序由成职院钟老师为计算机应用2016级Javascript课程教学需要而编写。
+               编写时间：2017-09-25, 最近修改时间：2017-10-30
+
+               请尊重别人劳动。如需引用，请指明出处。
+
+            2. 关于汉诺塔
+              （1） 游戏规则请自行百度后学习
+              （2） 游戏中的圆盘对应于disk（class="disk"）类元素，圆柱对英语本程序中的pile（堆）
+
+            3. 关于学习
+              （1）要看懂别人的程序，是很费头脑的。很多人宁愿自己写一个新程序，也不愿在别人基础上改程序，就是这个原因。
+                   因此若没有看懂，不要灰心。即使是有一两年编程经验的人，要看懂别人的代码（有很好的编程习惯和注释）都需要时间。
+              （2）递归调用是很烧头脑的编程方法。对于计算机应用学生来说，初学时没看懂非常正常。不要为此烦恼。以后遇见多了，就
+                   容易理解了。
+              （3）本程序中重点学习以下内容：
+                   呈现方面：复习Flex布局、复习非静态定位、复习margin和border的使用
+                   Js方面：  数组使用、动画绘制请求、回调函数（重点体会）、构造函数定义（重点体会）、对象概念（重点）、操纵元素运行时式样（重点）
+                            练习位置计算(很需要复习和练习你们的数学),
+                            理解promise, 理解async/await(新版本功能),
+                            模块化代码, 用函数封装局部变量
+            4. 绘制
+               每个圆盘都用两个嵌套的div来表示。其中外面的div具有相同大小并且边框不可见，它用来控制圆盘移动。内嵌的div可见，用来呈现圆盘效果。
+               圆盘的大小用内层div的左右marin来调整。在相同外部div大小的情况下，内嵌div的左右marin越大，圆盘显得越小。圆盘的颜色由colors数组
+               中提取后填充。
+
+            5. 动画
+               每个圆盘移动分成三个阶段(phase)：上升阶段、平移阶段和下降阶段。
+               上升阶段圆盘上升至圆柱顶端。此时只改变盘的bottom值。从top one变成max bottom.
+               平移阶段圆盘从一个柱（堆pile）的顶端移到另一个柱（堆pile）的顶端。此时只改变盘的left属性。从一个堆的left编程另一个堆的left.
+               下降阶段圆盘从柱顶端落下变成该柱中最上一个盘。改变盘的bottom属性，从max bottom编程该堆top one.
+
+               每个阶段耗时0.5秒，在常量ANIMATION_DURATION中定义（500）。
+
+            6. 递归
+               假设要将堆pa(pa指pile a，其余同理)中的N个圆盘移到堆pb,可以分为以下三步：
+               (1) 将pa中上面N-1盘移到堆pc         [1,n-1] => pc
+               (2) 将pa中最底下的盘移到堆pb              n => pb
+               (3) 将pc中n-1个盘移到pb            [1,n-1] => pb
+               很显然，这其中第(1)，(3)步骤即是递归调用。
+
+            7. 动画级联
+               为了保证动画效果是一个一个盘地移动，有三种实现思路。
+
+               一是使用动画结束回调函数。即每一个动画完成之后，调用回调函数通知本轮动画结束。而下一轮的动画
+               则在上一轮的完成回调中展开。
+
+               二是promise的then函数。Promise是个很难掌握透彻的东西。希望同学们反复、尝试阅读和练习。
+
+               三是使用ES7中的async/await,代码最简单易懂，但也是最难理解的。但是，这是异步操作的未来。
+               再难都必须学会。
+
+            8. 读完之后，仍有不懂得地方，请记录下来，邮件给老师，或直接在上课刚开始时当面告诉老师。
+         */
+
+        // 全局常量
+        const CALLBACK = 1, PROMISE = 2, AWAIT = 3;
+
+        // 定义堆构造函数
+        var Pile = (function () {
+            // 这是堆构造函数，要求两个参数：left说明堆的左侧位置，diskHeight说明圆盘的厚度（用于计算堆顶位置）
+            // 堆代表一个逻辑概念。在逻辑上包含圆盘。实体上包含圆盘的是html元素。不要混淆。
+            // 堆将空数组作为原型，因此获得push方法（添加圆盘于顶端）、pop方法（移除顶端圆盘）和length属性(获取堆中圆盘个数）。
+            // 此外堆还定义了clear方法（清除堆中所有圆盘）、top属性（获取堆中顶端位置）
+            function Pile() { };
+            Pile.prototype = [];    // 从数组继承
+            Pile.prototype.clear = function () { this.length = 0; }
+            Object.defineProperty(Pile.prototype, 'top', { get: function () { return this.length * (this.diskHeight || 0); } });
+            return Pile;
+        })();
+
+        class Pile extends Array {
+            constructor() {
+                this.diskHeight = 0;
+                super();
+            }
+            clear() { this.length = 0; };
+            get  top () { return this.length * (this.diskHeight); }
+        };
+          
+
+        // 全局变量
+        var pa = new Pile(), pb = new Pile(), pc = new Pile();
+
+        // 创建初始化函数。此处匿名函数的作用主要用于封装局部变量，减少全局变量
+        var initializer = (function () {
+            const COLORS = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple'];
+            var area = document.querySelector(".play-area"),    // 总的绘制区域
+                box = area.getBoundingClientRect(),             // 绘制区域的矩形值
+                columnWidth = box.width / 3;                    // 每个堆的宽度为绘制区的1/3
+            pa.left = 0;
+            pb.left = columnWidth;
+            pc.left = columnWidth + columnWidth;
+
+            // 本函数用来创建圆盘，并将圆盘全部添加到堆a之中
+            // Node: 此函数要刷新Pile.prototype的diskHeight和maxBottom值
+            return function (diskCount) {
+                // 计算圆盘尺寸
+                var diskWidth = box.width / 3,                  // 圆盘外层div宽度
+                    diskHeight = box.height / (2 * diskCount),  // 圆盘高度
+                    difference = (diskWidth * 0.3) / diskCount; // 圆盘内嵌div水平margin的级差（两个盘之间半径增/减量）
+
+                // 计算全局变量
+                Pile.prototype.diskHeight = diskHeight;
+                Pile.prototype.maxBottom = box.height - diskHeight;
+
+                // 清除原有disks
+                while (area.hasChildNodes()) area.removeChild(area.lastChild);
+                pa.clear();
+                pc.clear();
+
+                // 创建圆盘、初始化堆
+                var maxWidth = diskWidth * 0.9;
+                var margin = difference, bottom = 0;
+                for (var i = 0; i < diskCount; i++) {
+                    var disk = createBlock(margin, bottom, COLORS[i]);
+                    pa.push(disk);                 // 将圆盘压入堆a
+                    margin += difference;          // 增大圆盘内嵌div的左右margin == 减小圆盘直径
+                    bottom += diskHeight;
+                }
+
+                function createBlock(margin, bottom, color) {
+                    var outerBox = document.createElement("div"),
+                        innerBox = document.createElement("div");
+
+                    innerBox.style.backgroundColor = color;
+                    outerBox.appendChild(innerBox);
+
+                    outerBox.className = "disk";
+                    outerBox.style.width = diskWidth + "px";
+                    outerBox.style.height = diskHeight + "px";
+                    outerBox.style.paddingLeft = margin + "px";
+                    outerBox.style.paddingRight = margin + "px";
+                    outerBox.style.bottom = bottom + "px";
+                    area.appendChild(outerBox);
+
+                    return outerBox;
+                }
+            }
+        })();
+
+        var algorithm = (function () {
+            const ANIMATION_DURATION = 500; // 圆盘移动每个阶段耗时（毫秒）
+            return {
+                movePileCallback: function (from, via, to, cb) {
+                    moveDisksCallback(from, via, to, from.length, cb);
+                },
+                movePilePromise: function (from, via, to) {
+                    return moveDisksPromise(from, via, to, from.length);
+                },
+                movePileAsync: async function (from, via, to) {
+                    await moveDisksAsync(from, via, to, from.length);
+                }
+            };
+
+            // ===================== 核心动画代码 ====================
+            // 参数:  disk, 需要移动的盘，具体指向该disk的外层div
+            //       pos1 = position 1, 指动画的初始位置，它既可能是bottom, 也可能是left
+            //       pos2 = position 2, 指动画的目的位置，与pos1同时是bottom或left
+            //       property, 指动画所要操作的属性名字，是'bottom'和'left'之一
+            //       callback, 一个回调函数，当动画完成时调用它
+            // 位置计算公式：
+            //  newPosition = pos1 + elapsedTime * (pos2 - pos1) / ANIMATION_DURATION
+            //  其中elapsedTime指动画运行的时间。
+            //
+            //  将以上公式中在动画过程中不变的部分“(pos2-pos1)/ANIMATION_DURATION”预先计算出来
+            //  并放入变量ratio，可以适当提高计算效率，即以下代码行：
+            //      var ratio = (pos2 - pos1) / ANIMATION_DURATION;
+            //  然后新位置的计算方法改变为： newPosition=pos1+elapsedTime*ratio
+            //
+            // 动画链接的三种模式（callback、promise、await）都需要此方法
+            function moveDisk(disk, pos1, pos2, property, callback) {
+                var ratio = (pos2 - pos1) / ANIMATION_DURATION;
+                var start, elapsed; // start动画开始时间 elapsed动画已经运行的时间
+                function animate(timestamp) {
+                    if (!start) start = timestamp;
+                    elapsed = timestamp - start;
+                    if (elapsed < ANIMATION_DURATION) {
+                        // 根据发生时间所占整个动画时间的比率，来计算新位置
+                        disk.style[property] = (pos1 + elapsed * ratio) + "px";
+                        // 因动画未完成，再次请求动画绘制
+                        window.requestAnimationFrame(animate);
+                    } else {
+                        //动画时间大于或等于预定的时间，则结束动画，运行此处代码
+                        //由于浏览器响应动画绘制请求（requestAnimationFrame）的时间间隔不保证是固定的,
+                        //因此不能肯定在一个动画结束后圆盘正好在指定的终点位置。所以，需要手动调整动画
+                        //结束后圆盘的准确位置。调整方法是直接将属性值设置为pos2。
+                        disk.style[property] = pos2 + "px";
+                        // 此轮动画完成，调用回调函数
+                        callback();
+                    }
+                }
+                window.requestAnimationFrame(animate);//首次请求动画绘制
+            }
+
+            // 此函数将动画核心函数moveDisk封装为promise
+            function promiseMoveDisk(disk, pos1, pos2, property) {
+                return new Promise(function (resolve, reject) {
+                    // 封装的关键在于在moveDisk完成后的回调函数中解析promise,
+                    // 即这部分代码：() => resolve()
+                    moveDisk(disk, pos1, pos2, property, () => resolve());
+                });
+            }
+
+            // ================= callback pattern ===============
+            function moveDisksCallback(from, via, to, count, roundFinished) {
+                if (count === 1)
+                    moveTopDisk(from, to, roundFinished);
+                else {
+                    moveDisksCallback(from, to, via, count - 1, function () {
+                        moveTopDisk(from, to, function () {
+                            moveDisksCallback(via, from, to, count - 1, roundFinished)
+                        })
+                    })
+                }
+
+                // 此函数将源堆(from)的顶层圆盘移动到目的堆(to)，完成后调用finishedCallback函数
+                function moveTopDisk(from, to, finishedCallback) {
+                    // 从源堆弹出顶端圆盘（圆盘将不再存在于原来的堆中）
+                    var disk = from.pop();
+                    // move up
+                    moveDisk(disk, from.top, from.maxBottom, 'bottom', () => {
+                        // move horizontal，运行于move up完成后的回调函数中
+                        moveDisk(disk, from.left, to.left, 'left', () => {
+                            // move down， 运行于move horizontal完成后的回调函数中
+                            moveDisk(disk, from.maxBottom, to.top, 'bottom', () => {
+                                // 将圆盘压入目标堆，运行于move down完成之后的回调函数中
+                                to.push(disk);
+                                if (finishedCallback) finishedCallback(); //调用整个圆盘动画结束的回调函数
+                            })
+                        })
+                    });
+                }
+            }
+
+            // ================= promise pattern ===============
+            function moveDisksPromise(from, via, to, count) {
+                if (count === 1)
+                    return moveTopDisk(from, to);
+                else {
+                    return moveDisksPromise(from, to, via, count - 1)
+                        .then(() => moveTopDisk(from, to))
+                        .then(() => moveDisksPromise(via, from, to, count - 1));
+                }
+
+                // 此函数将from堆中顶层disk移动到to堆中
+                // 采用promsise模式，本质上是预先安排的移动的顺序，
+                // 然后在promise的逐步解析（resolve）过程中完成实际移动。
+                function moveTopDisk(from, to) {
+                    // 获取堆中最顶上的圆盘用于移动
+                    var disk = from.pop();
+                    return promiseMoveDisk(disk, from.top, from.maxBottom, 'bottom')          // move up
+                        .then(() => promiseMoveDisk(disk, from.left, to.left, 'left'))        // move horizontal
+                        .then(() => promiseMoveDisk(disk, from.maxBottom, to.top, 'bottom'))  // move down
+                        .then(() => { to.push(disk); return Promise.resolve() });             // move disk between piles and keep returning promise
+                }
+            }
+
+            // ================= await pattern ===============
+            async function moveDisksAsync(from, via, to, count) {
+                if (count === 1)
+                    await moveTopDiskAsync(from, to);
+                else {
+                    await moveDisksAsync(from, to, via, count - 1);
+                    await moveTopDiskAsync(from, to);
+                    await moveDisksAsync(via, from, to, count - 1);
+                }
+
+                async function moveTopDiskAsync(from, to) {
+                    // 获取堆中最顶上的圆盘用于移动
+                    var disk = from.pop();
+                    // move upward
+                    await promiseMoveDisk(disk, from.top, from.maxBottom, 'bottom');
+                    // move horizontal
+                    await promiseMoveDisk(disk, from.left, to.left, 'left');
+                    // move downward
+                    await promiseMoveDisk(disk, from.maxBottom, to.top, 'bottom');
+                    // move block between piles
+                    to.push(disk);
+                }
+            }
+        })();
+
+        // 接收、响应输入控制。 此处匿名函数用于控制作用域，减少全局变量
+        (function () {
+            var isBusy = false,
+                radios = document.querySelectorAll('input[type=radio]'),
+                controlPanel = document.body.querySelector('main>div'),
+                pattern = parseInt(Array.prototype.find.call(radios, rdo => rdo.checked).value);
+
+            // 此函数用于控制UI输入。当正在移动圆盘时，暂时禁止UI接收输入事件（给controlPanel适用disabled-div类）
+            // 在移动完成后解除禁止（清楚controlPanel适用的css类）。
+            function setBusy(busy) {
+                isBusy = busy;
+                controlPanel.className = isBusy ? 'disabled-div' : null;
+            }
+
+            // 处理下拉列表选择事件，并相应更新disk数量，重新初始化disk显示
+            document.querySelector('select').addEventListener('change', function (e) {
+                initializer(e.target.selectedIndex + 3);
+            });
+
+            // 处理radio input的改变事件，刷新动画链接模式（CALLBACK|PROMISE|AWAIT）
+            for (var i = 0; i < radios.length; i++)
+                radios[i].addEventListener('change', function (e) {
+                    e.target.checked && (pattern = parseInt(e.target.value));
+                });
+
+            // 处理button点击事件，开始移动
+            document.querySelector('button').addEventListener('click', async function () {
+
+                // 开始运行动画，设为忙碌状态，禁止用户输入
+                setBusy(true);
+
+                var from = pa.length > 0 ? pa : pc, // 测试圆盘所在的堆位置，将其作为移动起始堆from
+                    to = from === pa ? pc : pa;     // 非源堆作为目的堆to
+
+                switch (pattern) {
+                    case CALLBACK:
+                        algorithm.movePileCallback(from, pb, to, () => setBusy(false));
+                        break;
+                    case PROMISE:
+                        algorithm.movePilePromise(from, pb, to).then(() => setBusy(false));
+                        break;
+                    case AWAIT:
+                        await algorithm.movePileAsync(from, pb, to);
+                        setBusy(false);
+                        break;
+                }
+            });
+        })();
+
+        // 初始化
+        (function () {
+            var initCount = parseInt(document.querySelector("option[selected]").value);
+            initializer(initCount);
+        })();
+    </script>
+</body>
+</html>

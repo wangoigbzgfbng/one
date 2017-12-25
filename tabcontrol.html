@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #headers {
+            margin-bottom: -1px;
+            position: relative;
+            z-index: 2;
+        }
+
+            #headers > div {
+                display: inline-block;
+                border-top: solid 1px black;
+                border-left: solid 1px black;
+                border-right: solid 1px black;
+                border-bottom-width: 1px;
+                border-bottom-style: solid;
+                border-radius: 5px 5px 0 0;
+                padding: 0px 10px;
+            }
+
+        #contents {
+            border: black 1px solid;
+            width: 400px;
+            height: 200px;
+            padding: 10px;
+        }
+
+        .currentHeader {
+            border-bottom-color: white;
+        }
+
+        .hiddenContent {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div id="headers">
+            <div class="currentHeader">中国</div>
+            <div>美国</div>
+            <div>英国</div>
+            <div>德国</div>
+        </div>
+        <div id="contents">
+            <p>中国是世界四大文明古国之一，有着悠久的历史，距今约5000年前，以中原地区为中心开始出现聚落组织进而形成国家，后历经多次民族交融和朝代更迭，直至形成多民族国家的大一统局面。20世纪初辛亥革命后，君主政体退出历史舞台，共和政体建立。1949年中华人民共和国成立后，在中国大陆建立了人民代表大会制度的政体。</p>
+            <p class="hiddenContent">美利坚合众国（英语：United States of America），简称“美国”，是由华盛顿哥伦比亚特区、50个州和关岛等众多海外领土组成的联邦共和立宪制国家。其主体部分位于北美洲中部，美国中央情报局《世界概况》1989年至1996年初始版美国总面积是9,372,610平方公里，1997年修正为963万平方公里（加上五大湖中美国主权部分和河口、港湾、内海等沿海水域面积），人口3.2亿，通用英语，是一个移民国家[1]  。</p>
+            <p class="hiddenContent">大不列颠及北爱尔兰联合王国（United Kingdom of Great Britain and Northern Ireland），又称联合王国（United Kingdom），因主体是英格兰故简称英国，本土位于欧洲大陆西北面的不列颠群岛，被北海、英吉利海峡、凯尔特海、爱尔兰海和大西洋包围。[1] </p>
+            <p class="hiddenContent">德意志联邦共和国（德语：Bundesrepublik Deutschland），简称德国（两德统一前简称西德或联邦德国），是位于中欧的联邦议会共和制国家，北邻丹麦，西部与荷兰、比利时、卢森堡和法国接壤，南邻瑞士和奥地利，东部与捷克和波兰接壤，该国由16个联邦州组成，首都为柏林，领土面积357167平方公里，以温带气候为主，人口约8267万人，是欧洲联盟中人口最多的国家，以德意志人为主体民族。</p>
+        </div>
+    </div>
+    <script>
+        /* ==================================== 关于本例 ===================================
+         本程序于2017年10月26日由成职院钟伟老师编写。如有错漏请与他876682818@qq.com联系。
+         这个版本中的知识点：
+        （1）熟悉classList属性，学会使用toggle方法。
+        （2）理解程序中经常遇到的"保存当前状态"的问题
+        （3）初步接触闭包（closure）。同学们看到此例时闭包知识点尚未讲授。因此，这部分不必完全理解。
+            但对于一个函数可以将另一个函数作为返回值的模式应该充分地思考和加以领会。今后同学们可以
+            扩展阅读First-Class function知识点（注意，现在不要去读这部分。知识储备不够时去读它只
+            会徒增烦劳）。
+        （4）短路表达式
+        */
+
+
+        /*
+         * 1. currentManager 名字来自于 current element manager的缩写，意思是当前元素管理器。它通过闭包追踪当前元素（current），并提供切换当前元素状态的功能。
+         * 2. 关于参数current: (1)名字current,英文意思是当前的，代表当前元素；(2)它被放入闭包作为追踪当前元素的变量； (3)创建新的当前元素管理器时，它接收初始元素。
+         * 3. 关于参数className：(1)名字class + name, 类名；(2) 它是管理器所要操作的类名;(3)它也存在于闭包中
+         */
+        function currentManager(current, className) {
+            /* 以下才是当前元素管理器实例。这个实例函数接收新元素，并把新元素和放在闭包中的current进行比较，
+               如果发生变化，则刷新“老”、“新”当前元素的显示状态。
+               显示状态的刷新通过应用和撤销在元素上的类来实现。
+               关于参数newElement: 名字new + element，意思是新的元素
+            */
+            return function (newElement) {
+                if (current !== newElement) { // 如果新指定的当前元素和记录在current里面的当前元素不相等，进行后面的操作
+                    current && current.classList.toggle(className); // 如果current记录有当前元素，则取消应用名为className的类，这是一种短路表达式
+                    current = newElement;   //更新当前元素（在current中记录新的当前元素）
+                    current.classList.toggle(className);//在新的当前元素上应用名为className的类
+                    return true;    // 向调用方表明发生了当前元素的切换操作
+                }
+                return false;   // 向调用方表明未发生当前元素的切换操作
+            }
+        }
+
+        var headers = document.getElementById("headers");   // headers指向包含所有header的容器
+        var contents = document.getElementById("contents"); // contents指向包含所有content的容器
+
+        // 通过调用currentManager函数，并提供初始元素(第一个header）和类名(currentHeader)创建“当前header管理器”。
+        // 这个创建出来的管理器是一个函数，调用它可以刷新当前header.
+        // setCurrentHeader名字来由：set current header意思是设置当前header
+        var setCurrentHeader = currentManager(headers.children[0], "currentHeader");
+
+        // 通过调用currentManager函数，并提供初始元素(第一个content）和类名(hiddenContent)创建“当前content管理器”。
+        // 这个创建出来的管理器是一个函数，调用它可以刷新当前content.
+        // setCurrentContent名字来由：set current content意思是设置当前content
+        var setCurrentContent = currentManager(contents.children[0], "hiddenContent");
+
+        // 预先将每一个header元素和它对应的content元素关联。这样做的好处是不需要运行时查找，执行速度快。
+        // 方法是为每个header添加属性contentElement（名字来源：content+element，意思“内容元素”），
+        // 该新添加的属性指向header对应的content元素。
+        for (var i = 0; i < headers.children.length; i++) 
+            headers.children[i].contentElement = contents.children[i];
+
+        // 在承装header的容器元素上注册一个click事件处理函数，通过冒泡获取所有单个header上的点击事件
+        headers.addEventListener("click", function (e) {
+            var clicked = e.target;
+            // 这个if语句确保两点：一是点击事件由div元素触发；二是触发点击事件的div上没有设置id属性（排除header的容器）
+            if (clicked.tagName === "DIV" && !clicked.getAttribute("id")) {
+                // 下面的语句先从左向右执行。
+                // 首先执行setCurrentHeader(clicked)，它尝试刷新当前header。并且如果当前header改变了，它会返回true,否则返回false.
+                // 当setCurrentHeader(clicked)返回true时，才会继续执行右边的第二个函数 setCurrentContent(clicked.contentElement)。
+                // 当setCurrentHeader(clicked)返回false时，&& 运算符被短路。第二个函数不会再执行。
+                // 注：请看这个表达式： false && expression。 在两个布尔值进行&&运算时，如果第一个值确定是false，则无论第二个值是否为真，
+                //     整个表达式的值都铁定都是false。所以此时根本不必去考虑第二个表达式的值。因此，第二个表达式就不会被评估（运行）。这就
+                //     是一种跳过第二个表达式的短路操作。
+                setCurrentHeader(clicked) && setCurrentContent(clicked.contentElement);
+            }
+        })
+    </script>
+</body>
+</html>

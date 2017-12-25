@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        .absolute-position {
+            position: absolute;
+        }
+
+        .ball {
+            width: 100px;
+            height: 100px;
+            background-color: blue;
+            border-radius: 50%;
+        }
+        .rect{
+            width:150px;
+            height:150px;
+            background-color:red;
+            top:110px;
+        }
+        .heli{
+            width:200px;
+            top:300px;
+            border:1px solid red ;
+            border-radius: 20%;
+            display:block;
+        }
+    </style>
+</head>
+<body>
+    <div id="ball" class="ball absolute-position"></div>
+    <div id="rect" class="rect absolute-position"></div>
+    <img id="heli"  class="heli absolute-position" />
+    <script>
+        // 如何构造类(两种成员：属性+方法)和对象实例
+        // 类、对象、实例、方法vs函数, this
+        // 1.{}:定义实例，成员间逗号分隔，
+        var people = [];
+        var zhangsan = {
+            familyName: '张',
+            name: '三',
+            height: 178,
+            get fullName() { return this.familyName + this.name },
+            favorite: function () { return '篮球' }
+        };
+        people.push(zhangsan);
+        // 2.object.create方法, 
+        // lisi继承了zhangsan的所有成员
+        var xiaozhang = Object.create(zhangsan);
+        xiaozhang.name = '四';
+        xiaozhang.height = 180;
+        xiaozhang.favorite = function () { return '足球' }
+        people.push(xiaozhang);
+        // 3. class
+        // class 定义类，new 创建实例
+        // constructor构造器
+        class Person {
+            constructor(familyName, name, height, favorite) {
+                this.familyName = familyName;
+                this.name = name;
+                this.height = height;
+                this._favorite = favorite;
+            }
+            get fullName() { return this.familyName + this.name }
+            favorite() { return this._favorite }
+        }
+        var father = new Person('李', '四', 175, '桌球');
+        var son = new Person('王', '八', 160, '铅球');
+        people.push(father);
+        people.push(son);
+        people.push(new Person('杨', '继业', 190, '战斗'));
+
+        // 4. 构造函数function: prototype原型
+        function ChinesePerson(familyName, name, height, favorite) {
+            this.familyName = familyName;
+            this.name = name;
+            this.height = height;
+            this._favorite = favorite;
+        }
+        Object.defineProperty(ChinesePerson.prototype, 'fullName', { get: function () { return this.familyName + this.name } })
+        ChinesePerson.prototype.favorite = function () { return this._favorite; }
+
+        var p4 = new ChinesePerson('Beta', 'Go', 10, '围棋');
+        people.push(p4);
+
+
+        //(function () {
+        //    for (var p of people)
+        //        print(p);
+        //})();
+
+        function print(person) {
+            document.write(`名字：${person.fullName} 运动：${person.favorite()}<br/>`)
+        }
+    </script>
+
+    <script>
+        class Movable {
+            constructor(id, timespan) {
+                this.element = document.getElementById(id);
+                this.timespan = timespan;
+                this.max = document.body.clientWidth - this.element.offsetWidth;
+                this.element.style.transition = `all linear ${this.timespan}s`;
+            }
+            bounce() {
+                var rightward = true;
+                var that = this;
+                function move() {
+                    if (rightward)
+                        that.element.style.left = that.max + 'px';
+                    else
+                        that.element.style.left = '0px';
+                    rightward = !rightward;
+                    setTimeout(move, that.timespan * 1000);
+                }
+                move();
+            }
+        }
+        new Movable('ball', 3).bounce();
+        new Movable('rect', 2).bounce();
+        new Movable('heli', 1).bounce();
+    </script>
+</body>
+</html>

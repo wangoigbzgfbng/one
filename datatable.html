@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>用数据创建客户端UI</title>
+    <style>
+        html, body {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            text-align: center;
+        }
+
+        main {
+            display: inline-block;
+        }
+
+        table {
+            border-collapse: collapse;
+            border-spacing: unset;
+            border: solid 1px black;
+        }
+        thead > tr {
+            background-color: blue;
+            color: white;
+        }
+        th {
+            border-style: solid;
+            border-width: 0 1px;
+            border-color: white;
+            font: 900 24px 黑体;
+            padding: 5px 10px;
+        }
+
+            th:first-child {
+                border-left-color: black;
+            }
+
+            th:last-child {
+                border-right-color: black;
+            }
+
+        td {
+            border-style: solid;
+            border-width: 0 1px;
+            border-color: black;
+            padding: 1px 10px;
+        }
+
+        .left-align {
+            text-align: left;
+        }
+
+        .right-align {
+            text-align: right;
+        }
+
+        .center-align {
+            text-align: center;
+        }
+
+        tbody > tr:nth-child(2n+1) {
+            background-color: lightgray;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>成职院英语等级考试成绩表</h1>
+        <table>
+            <thead><tr></tr></thead>
+            <tbody></tbody>
+        </table>
+    </main>
+    <script>
+        var headers = ['学号', '姓名', '报名时间', '报名号', '考号', '考室', '座位号', '分数', '考试时间', '考试名称'];
+        var aligns = [-1, -1, 0, 1, 0, -1, 1, 1, 0, -1];
+        var records = [{ sno: '15306010132', name: '陈越涵', 'enter time': '2016-09-14', 'enter number': '510311200213', mat: '510311162200209', room: 'A1-2', ordinal: 9, score: 492, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15301010731', name: '赵欣越', 'enter time': '2016-09-16', 'enter number': '510311200082', mat: '510311162200907', room: 'A3-3', ordinal: 7, score: 475, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15305040111', name: '李骏', 'enter time': '2016-09-13', 'enter number': '510311200055', mat: '510311162200316', room: 'A1-3', ordinal: 16, score: 460, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010128', name: '杨谦', 'enter time': '2016-09-13', 'enter number': '510311200212', mat: '510311162200727', room: 'A3-1', ordinal: 27, score: 460, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010313', name: '吴贵娇', 'enter time': '2016-09-17', 'enter number': '510311200263', mat: '510311162201122', room: 'A4-1', ordinal: 22, score: 456, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15305050136', name: '何丽娟', 'enter time': '2016-09-14', 'enter number': '510311200158', mat: '510311162200823', room: 'A3-2', ordinal: 23, score: 448, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010134', name: '范冬梅', 'enter time': '2016-09-13', 'enter number': '510311200215', mat: '510311162200406', room: 'A2-1', ordinal: 6, score: 447, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010209', name: '邓雪', 'enter time': '2016-09-13', 'enter number': '510311200209', mat: '510311162200222', room: 'A1-2', ordinal: 22, score: 446, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010124', name: '李思瑶', 'enter time': '2016-09-13', 'enter number': '510311200220', mat: '510311162200804', room: 'A3-2', ordinal: 4, score: 442, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010314', name: '吴惠玲', 'enter time': '2016-09-14', 'enter number': '510311200236', mat: '510311162200719', room: 'A3-1', ordinal: 19, score: 436, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15302030201', name: '朱林秋', 'enter time': '2016-09-13', 'enter number': '510311200077', mat: '510311162200721', room: 'A3-1', ordinal: 21, score: 425, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010243', name: '梁燕', 'enter time': '2016-09-13', 'enter number': '510311200239', mat: '510311162200714', room: 'A3-1', ordinal: 14, score: 424, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '14301050204', name: '涂均霖', 'enter time': '2016-09-17', 'enter number': '510311200184', mat: '510311162200514', room: 'A2-2', ordinal: 14, score: 423, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '14301050323', name: '许雪婷', 'enter time': '2016-09-13', 'enter number': '510311200173', mat: '510311162201020', room: 'A3-4', ordinal: 20, score: 421, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010125', name: '李婉莹', 'enter time': '2016-09-14', 'enter number': '510311200221', mat: '510311162200528', room: 'A2-2', ordinal: 28, score: 421, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '14301050428', name: '刘琴', 'enter time': '2016-09-15', 'enter number': '510311200181', mat: '510311162200124', room: 'A1-1', ordinal: 24, score: 417, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '14301010226', name: '陈皓然', 'enter time': '2016-09-12', 'enter number': '510311200001', mat: '510311162200703', room: 'A3-1', ordinal: 3, score: 414, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010133', name: '罗迎', 'enter time': '2016-09-13', 'enter number': '510311200214', mat: '510311162200301', room: 'A1-3', ordinal: 1, score: 414, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15303010322', name: '吴逍玉', 'enter time': '2016-09-15', 'enter number': '510311200094', mat: '510311162200712', room: 'A3-1', ordinal: 12, score: 414, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010145', name: '韩静', 'enter time': '2016-09-13', 'enter number': '510311200217', mat: '510311162200916', room: 'A3-3', ordinal: 16, score: 412, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '14304030134', name: '谢川', 'enter time': '2016-09-13', 'enter number': '510311200129', mat: '510311162200704', room: 'A3-1', ordinal: 4, score: 410, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010114', name: '申欢', 'enter time': '2016-09-14', 'enter number': '510311200245', mat: '510311162200722', room: 'A3-1', ordinal: 22, score: 409, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '14304110107', name: '刘芳源', 'enter time': '2016-09-13', 'enter number': '510311200108', mat: '510311162200419', room: 'A2-1', ordinal: 19, score: 408, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15304030134', name: '陈鸿', 'enter time': '2016-09-14', 'enter number': '510311200143', mat: '510311162200305', room: 'A1-3', ordinal: 5, score: 406, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '14301050115', name: '万思雯', 'enter time': '2016-09-16', 'enter number': '510311200126', mat: '510311162200706', room: 'A3-1', ordinal: 6, score: 403, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010107', name: '马婷婷', 'enter time': '2016-09-14', 'enter number': '510311200224', mat: '510311162200427', room: 'A2-1', ordinal: 27, score: 398, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010224', name: '李佳', 'enter time': '2016-09-14', 'enter number': '510311200231', mat: '510311162200806', room: 'A3-2', ordinal: 6, score: 398, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15306010242', name: '夏燕梅', 'enter time': '2016-09-14', 'enter number': '510311200238', mat: '510311162200122', room: 'A1-1', ordinal: 22, score: 397, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '14301050206', name: '鲜琼英', 'enter time': '2016-09-13', 'enter number': '510311200185', mat: '510311162201005', room: 'A3-4', ordinal: 5, score: 397, date: '2016-12-17', exam: '大学英语六级考试' },
+        { sno: '15304010331', name: '李佳', 'enter time': '2016-09-14', 'enter number': '510311200163', mat: '510311162200202', room: 'A1-2', ordinal: 2, score: 395, date: '2016-12-17', exam: '大学英语六级考试' }];
+
+        // 注意这个数组的使用可以节约if-else语句。
+        // 在判断新建单元格到底使用何种对齐方式时，一个办法是使用if-else
+        // 语句组合来决定。比如，已知一个td和它的对齐数据align(-1,0,1之一)
+        // 下面的代码使用if-else语句来确定td适用的类：
+        //  if (align < 0)
+        //     td.className = 'left-align';
+        //  else if (align > 0)
+        //     td.className = 'right-align';
+        //  else
+        //     td.className = 'center-align';
+        // 显然看起来比较长。更简单的办法是使用下面的数组，代码如下：
+        // 
+        //    td.className = alignClasses[align + 1];
+        //
+        // 这样，一条语句就搞定。其中巧妙地地方在于，align的取值范围【-1,0,1】，
+        // 而align+1后，取值变成了【0,1,2】这三个，而他们正好对应着alignClasses
+        // 数组的三个下标。这种类似的“巧合”用好了会使你的代码非常坚固而且高效。
+        // 所以你们以后要注意去发现。本来指望今天有人能够发现这一点，但很遗憾
+        // 你们还纠结于一些基本功能，没有更多的思维去思考技巧问题。不过这个也
+        // 正常，毕竟是初学。但希望今后积累一定的技能后，要多主动思考解决问题
+        // 的不同方案，并选择最佳方案实施。
+        var alignClasses = ['left-align', 'center-align', 'right-align'];
+
+        // 获取表格标题行tr元素，准备用于往其中添加列标题
+        // hr = head row 的头一个字母，代表标题行
+        var hr = document.body.querySelector('thead>tr');
+
+        // 获取表体，以备后面往其中添加行。
+        // tb = table body =tbody.
+        var tb = document.body.querySelector('table>tbody');
+       
+        // 生成表格列标题
+        // headers是一个文本数组，使用for循环“处理”其中的每一个元素
+        // 每次“处理”，就是用每一个文本生成一个td，并把这个td加入到标题行中
+        // 标题行就是前面准备的hr
+        // 此处创建td使用了自定义函数createCell，是因为我觉得后面再添加
+        // 表体内容时也要用到，属于类似的重复工作，因此，设计一个函数专门
+        // 来处理这种重复工作。createCell函数的工作原理见它的函数说明
+        for (var i = 0; i < headers.length; i++) {
+            // 注意单元格类型是th, 而且所有都居中对齐(参数0)
+            createCell(hr, 'th', 0, headers[i]);
+        }
+
+        // 创建表体的行和单元格
+        // rocords层次看，他是一个数组，因此使用for循环处理每个元素
+        // 从records元素的层次看，每个元素是一个对象。为了处理对象的
+        // 每个属性，我们使用for-in循环。
+        for (var i = 0; i < records.length; i++) {
+            // 为当前元素（指records[i]）创建一个行
+            var row = document.createElement('tr');
+
+            // 用变量c计数，确定属性的序号
+            var c = 0;
+            for (var attr in records[i]) {
+                // 为当前属性（records[i][attr]）添加单元格，并将单元格加入到
+                // 新创建的行row中。注意单元格类型是td
+                createCell(row, 'td', aligns[c++], records[i][attr]);
+            }
+
+            // 将新创建的行添加到表体中。
+            tb.appendChild(row);
+        } 
+
+        // 这个函数创建一个单元格，并将它添加到指定的行中去。
+        // 注意，这个单元格可能是html元素th，也可能是html元素td,
+        // 因此此函数增添了一个参数tag, 用来接收元素标签名称。
+        // 参数：
+        // 1.tr: 新创建的单元格所要加入的行。新单元格生成后，将作为子元素追加到其中去。
+        // 2.tag: 创建的单元格类型。值可能是th或td。由此函数的调用方确定。
+        // 3.align: 单元格内容的对齐方式数据：
+        // 4.value: 单元格显示的内容
+        function createCell(tr, tag, align, value) {
+            var td = document.createElement(tag);
+            td.innerText = value;
+            td.className = alignClasses[align + 1]; // 看数组alignClasses定义前的说明
+            tr.appendChild(td);
+        }
+    </script>
+</body>
+</html>
