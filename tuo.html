@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: solid red 1px;
+        }
+
+            body > div {
+                border: outset 1px lightgray;
+                padding: 10px;
+                margin: 0 auto;
+                height: 80%;
+                width: 350px;
+            }
+
+        ul {
+            font-size: 24px;
+            
+        }
+        input{
+            border:solid 1px red;
+        }
+        
+    </style>
+    <script>
+        addEventListener("load", function () {
+            var divs = document.getElementsByTagName("div"),
+                lis = document.getElementsByTagName("li");
+
+            // register drop event for each ul element
+            for (var i = 0; i < divs.length; i++) {
+                var div = divs[i];
+                div.addEventListener("dragover", function (evt) {
+                    evt.preventDefault();
+                });
+                div.addEventListener("drop", function (evt) {
+                    evt.preventDefault();
+                    var li = getPersonElement(evt.dataTransfer.getData("person"));
+                    if (evt.target.tagName==="DIV") {
+                        evt.target.children[1].appendChild(li);
+                    }
+                });               
+            }
+            for (i = 0; i < lis.length; i++) {
+                lis[i].addEventListener("dragstart", function (evt) {
+                    evt.dataTransfer.setData("person", evt.target.textContent);
+                });
+            }
+
+            function getPersonElement(name) {
+                for (var i = 0; i < lis.length; i++) {
+                    if (lis[i].textContent == name) return lis[i];
+                }
+                return null;
+            }
+        });
+    </script>
+</head>
+<body>
+    <div>
+        <h1>the Rich（有钱人）</h1>
+        <ul>
+            <li draggable="true">Bill Gates</li>
+            <li draggable="true">Teacher Zhong</li>
+            <li draggable="true">Ma Yun</li>
+            <li draggable="true">Ma Huateng</li>
+        </ul>
+    </div>
+    <div>
+        <h1>the Poor（穷人）</h1>
+        <ul>
+            <li draggable="true">Jeff Bezos</li>
+            <li draggable="true">Student Li</li>
+            <li draggable="true">Li Yanhong</li>
+            <li draggable="true">George Soros</li>
+        </ul>
+    </div>
+    
+</body>
+</html>
