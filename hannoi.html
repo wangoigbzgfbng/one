@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        * {
+            /*border: solid 1px gray;*/
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .play-area {
+            width: 900px;
+            height: 600px;
+            position: relative;
+            border: solid 1px gray;
+        }
+
+        .block {
+            /*border: solid lightgray 1px;*/
+            /*border-radius: 5px;*/
+            position: absolute;
+            left: 0;
+        }
+
+            .block > div {
+                height: 100%;
+                margin: auto;
+                border:solid 1px lightgray;
+                border-radius:5px;
+            }
+    </style>
+</head>
+<body>
+    <div class="play-area">
+
+    </div>
+    <script>
+        var colors = ["red", "orange", "yellow", "green"];//, "cyan", "blue", "purple",
+            //"red", "orange", "yellow", "green", "cyan", "blue", "purple"];
+        var blockWidth, blockHeight, difference;
+        var area = document.querySelector(".play-area"),
+            box = area.getBoundingClientRect(),
+            columnWidth = box.width / 3,
+            phaseSeconds = 500,
+            pa = new Pile(0), pb = new Pile(columnWidth), pc = new Pile(columnWidth + columnWidth);
+
+        /*
+         * @param left
+         */
+        function Pile(left "woluanjiade") {
+            this.blocks = [];
+            this.left = left;
+        };
+        Pile.prototype.push = function (block) {
+            return this.blocks.push(block);
+        }
+        Pile.prototype.pop = function () {
+            return this.blocks.pop();
+        }
+        Pile.prototype.getTop = function () {
+            return this.blocks.length * blockHeight;
+        }
+        Pile.prototype.getLength = function () {
+            return this.blocks.length;
+        }
+
+        // this function create blocks and add them into pile a.
+        function init(count) {
+            blockWidth = box.width / 3;
+            blockHeight = box.height / (2 * colors.length); //用一半高度来显示所有block
+            difference = (blockWidth * 0.4) / colors.length;
+
+            var maxWidth = blockWidth * 0.9;
+            var margin = difference, bottom = 0;
+            for (var i = 0; i < colors.length; i++) {
+                var b = createBlock(blockHeight, margin, colors[i], bottom);
+                area.appendChild(b);
+                pa.push(b);
+                margin += difference;
+                bottom += blockHeight;
+            }
+
+            function createBlock(h, margin, color, bottom) {
+                var outerBox = document.createElement("div"),
+                    innerBox = document.createElement("div");
+                outerBox.appendChild(innerBox);
+                outerBox.setAttribute("class", "block");
+                outerBox.style.width = blockWidth + "px";
+                outerBox.style.height = blockHeight + "px";
+                outerBox.style.paddingLeft = margin + "px";
+                outerBox.style.paddingRight = margin + "px";
+                outerBox.style.bottom = bottom + "px";
+                innerBox.style.backgroundColor = color;
+                return outerBox;
+            }
+        }
+
+        // move the top disk
+        function moveTop(from, to, finishedCallback) {
+            var block = from.pop(),     // 从源堆里面提取最顶上的块用于移动
+                start,                  // 移动动画的开始时间
+                base = from.getTop(),
+                ratio = (box.height - blockHeight - base) / phaseSeconds,     // 属性在每次动画中的增量
+                upPhaseEnded = false,    // 上升阶段是否结束的标志
+                hPhaseEnded = false,    // 水平移动阶段是否结束的标志
+                duration;
+
+
+            function phaseMove(timestamp) {
+                if (!start) start = timestamp;
+                duration = timestamp - start;
+                if (timestamp - start < phaseSeconds) {     // 上升阶段，只调整block的bottom属性值
+                    block.style.bottom = base + duration * ratio + "px";
+                    window.requestAnimationFrame(phaseMove);
+                } else if (timestamp - start < phaseSeconds * 2) {  // 平移阶段，只调整block的left属性值
+                    if (!upPhaseEnded) {
+                        upPhaseEnded = true;
+                        block.style.bottom = (box.height - blockHeight) + "px";
+                        base = from.left;
+                        ratio = (to.left - from.left) / phaseSeconds;
+                    }
+                    block.style.left = base + (duration - phaseSeconds) * ratio + "px";
+                    window.requestAnimationFrame(phaseMove);
+                } else if (timestamp - start < phaseSeconds * 3) {// 下降阶段，调整block的bottom属性值
+                    if (!hPhaseEnded) {
+                        hPhaseEnded = true;
+                        block.style.left = to.left + "px";
+                        base = box.height - blockHeight;
+                        ratio = (to.getTop() - base) / 1000;
+                    }
+                    block.style.bottom = base + (duration - phaseSeconds * 2) * ratio + "px";
+                    window.requestAnimationFrame(phaseMove);
+                } else {
+                    block.style.bottom = to.getTop() + "px";
+                    to.push(block);
+                    finishedCallback && finishedCallback(); // 完成动画，调用完成回调
+                }
+            }
+            window.requestAnimationFrame(phaseMove);
+        }
+
+        // move recusively
+        function moveBlocks(from, via, to, count, roundFinished) {
+            if (count === 1)
+                moveTop(from, to, roundFinished);
+            else {
+                moveBlocks(from, to, via, count - 1, function () {
+                    moveTop(from, to, function () {
+                        moveBlocks(via, from, to, count - 1, roundFinished)
+                    })
+                })
+            }
+        }
+
+        init();
+        moveBlocks(pa, pb, pc, pa.getLength());
+
+    </script>
+</body>
+</html>
